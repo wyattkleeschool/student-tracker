@@ -12,28 +12,33 @@
         .student-list { display: flex; flex-wrap: wrap; }
         .student-item { background: #f0f0f0; margin: 5px; padding: 5px; cursor: pointer; }
         .selected { background: #add8e6; }
+        .page { display: none; }
+        .active { display: block; }
     </style>
 </head>
 <body>
     <h1>Classroom Behavior Tracker</h1>
 
-    <div class="section">
+    <div id="periodPage" class="page active">
         <h2>Periods</h2>
         <input type="text" id="periodInput" placeholder="Enter period name">
         <button onclick="addPeriod()">Add Period</button>
         <div id="periodList"></div>
     </div>
 
-    <div class="section">
-        <h2>Students</h2>
-        <input type="text" id="studentInput" placeholder="Enter student name">
-        <button onclick="addStudent()">Add Student</button>
-        <div id="studentList" class="student-list"></div>
-    </div>
-
-    <div class="section">
-        <h2>Behaviors</h2>
-        <div id="behaviorButtons"></div>
+    <div id="studentPage" class="page">
+        <h2 id="currentPeriodTitle"></h2>
+        <button onclick="showPage('periodPage')">Back to Periods</button>
+        <div class="section">
+            <h3>Students</h3>
+            <input type="text" id="studentInput" placeholder="Enter student name">
+            <button onclick="addStudent()">Add Student</button>
+            <div id="studentList" class="student-list"></div>
+        </div>
+        <div class="section">
+            <h3>Behaviors</h3>
+            <div id="behaviorButtons"></div>
+        </div>
     </div>
 
     <script>
@@ -44,6 +49,11 @@
 
         const POSITIVE_BEHAVIORS = ['Asking deep questions', 'Helping a peer', 'Answering questions', 'Helping organization'];
         const NEGATIVE_BEHAVIORS = ['On phone', 'Off task', 'Cheating', 'Missing materials'];
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
 
         function addPeriod() {
             const periodName = document.getElementById('periodInput').value.trim();
@@ -64,14 +74,12 @@
 
         function selectPeriod(period) {
             currentPeriod = period;
+            document.getElementById('currentPeriodTitle').textContent = period;
             updateStudentList();
+            showPage('studentPage');
         }
 
         function addStudent() {
-            if (!currentPeriod) {
-                alert('Please select a period first');
-                return;
-            }
             const studentName = document.getElementById('studentInput').value.trim();
             if (studentName && !students[currentPeriod].includes(studentName)) {
                 students[currentPeriod].push(studentName);
@@ -107,13 +115,15 @@
                 alert('Please select a student first');
                 return;
             }
-            console.log(`Logged: ${selectedStudent} - ${behavior}`);
+            console.log(`Logged for ${currentPeriod}: ${selectedStudent} - ${behavior}`);
             // Here you would typically save this to your data structure or send to a server
         }
 
         // Initialize the app
+        updatePeriodList();
         createBehaviorButtons();
     </script>
 </body>
 </html>
+
 
