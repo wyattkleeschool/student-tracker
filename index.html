@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom Behavior Tracker</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
         .section { margin-bottom: 20px; }
         button { padding: 5px 10px; margin: 5px; }
         input { padding: 5px; margin: 5px; }
@@ -14,6 +14,10 @@
         .selected { background: #add8e6; }
         .page { display: none; }
         .active { display: block; }
+        .behavior-columns { display: flex; justify-content: space-between; }
+        .behavior-column { width: 48%; }
+        .positive { background-color: #90EE90; }
+        .negative { background-color: #FFB6C1; }
     </style>
 </head>
 <body>
@@ -37,7 +41,10 @@
         </div>
         <div class="section">
             <h3>Behaviors</h3>
-            <div id="behaviorButtons"></div>
+            <div class="behavior-columns">
+                <div class="behavior-column" id="positiveBehaviors"></div>
+                <div class="behavior-column" id="negativeBehaviors"></div>
+            </div>
         </div>
     </div>
 
@@ -68,7 +75,10 @@
         function updatePeriodList() {
             const periodList = document.getElementById('periodList');
             periodList.innerHTML = periods.map(period => 
-                `<button onclick="selectPeriod('${period}')">${period}</button>`
+                `<div>${period} 
+                    <button onclick="selectPeriod('${period}')">Select</button> 
+                    <button onclick="deletePeriod('${period}')">Delete</button>
+                </div>`
             ).join('');
         }
 
@@ -77,6 +87,16 @@
             document.getElementById('currentPeriodTitle').textContent = period;
             updateStudentList();
             showPage('studentPage');
+        }
+
+        function deletePeriod(period) {
+            periods = periods.filter(p => p !== period);
+            delete students[period];
+            if (currentPeriod === period) {
+                currentPeriod = '';
+                showPage('periodPage');
+            }
+            updatePeriodList();
         }
 
         function addStudent() {
@@ -91,22 +111,38 @@
         function updateStudentList() {
             const studentList = document.getElementById('studentList');
             studentList.innerHTML = students[currentPeriod].map(student => 
-                `<div class="student-item" onclick="selectStudent('${student}')">${student}</div>`
+                `<div class="student-item">
+                    <span onclick="selectStudent('${student}')">${student}</span>
+                    <button onclick="deleteStudent('${student}')">Delete</button>
+                </div>`
             ).join('');
         }
 
         function selectStudent(student) {
             selectedStudent = student;
             document.querySelectorAll('.student-item').forEach(item => {
-                item.classList.toggle('selected', item.textContent === student);
+                item.classList.toggle('selected', item.querySelector('span').textContent === student);
             });
         }
 
+        function deleteStudent(student) {
+            students[currentPeriod] = students[currentPeriod].filter(s => s !== student);
+            if (selectedStudent === student) {
+                selectedStudent = '';
+            }
+            updateStudentList();
+        }
+
         function createBehaviorButtons() {
-            const behaviorButtons = document.getElementById('behaviorButtons');
-            const allBehaviors = [...POSITIVE_BEHAVIORS, ...NEGATIVE_BEHAVIORS];
-            behaviorButtons.innerHTML = allBehaviors.map(behavior => 
-                `<button onclick="logBehavior('${behavior}')">${behavior}</button>`
+            const positiveBehaviors = document.getElementById('positiveBehaviors');
+            const negativeBehaviors = document.getElementById('negativeBehaviors');
+            
+            positiveBehaviors.innerHTML = POSITIVE_BEHAVIORS.map(behavior => 
+                `<button class="positive" onclick="logBehavior('${behavior}')">${behavior}</button>`
+            ).join('');
+            
+            negativeBehaviors.innerHTML = NEGATIVE_BEHAVIORS.map(behavior => 
+                `<button class="negative" onclick="logBehavior('${behavior}')">${behavior}</button>`
             ).join('');
         }
 
@@ -125,5 +161,3 @@
     </script>
 </body>
 </html>
-
-
