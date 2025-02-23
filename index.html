@@ -1,139 +1,119 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Classroom Tracker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Behavior Tracker</title>
     <style>
-        body { font-family: Arial; max-width: 800px; margin: 20px auto; }
-        .section { margin: 20px 0; }
-        button { padding: 8px 16px; background: #3498db; color: white; }
-        .student-list { list-style: none; padding: 0; }
-        .student-list li { padding: 5px 0; cursor: pointer; }
-        .period-selector { margin-bottom: 20px; }
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .section { margin-bottom: 20px; }
+        button { padding: 5px 10px; margin: 5px; }
+        input { padding: 5px; margin: 5px; }
+        .student-list { display: flex; flex-wrap: wrap; }
+        .student-item { background: #f0f0f0; margin: 5px; padding: 5px; cursor: pointer; }
+        .selected { background: #add8e6; }
     </style>
 </head>
 <body>
-    <div class="period-selector">
+    <h1>Classroom Behavior Tracker</h1>
+
+    <div class="section">
         <h2>Periods</h2>
+        <input type="text" id="periodInput" placeholder="Enter period name">
         <button onclick="addPeriod()">Add Period</button>
-        <div id="periods"></div>
+        <div id="periodList"></div>
     </div>
 
-    <div id="periodContent">
-        <div class="section">
-            <h2>Students</h2>
-            <input type="text" id="studentInput" placeholder="Add student">
-            <button onclick="addStudent()">Add</button>
-            <div id="students"></div>
-        </div>
+    <div class="section">
+        <h2>Students</h2>
+        <input type="text" id="studentInput" placeholder="Enter student name">
+        <button onclick="addStudent()">Add Student</button>
+        <div id="studentList" class="student-list"></div>
+    </div>
 
-        <div class="section">
-            <h2>Behaviors</h2>
-            <div id="behaviors"></div>
-        </div>
+    <div class="section">
+        <h2>Behaviors</h2>
+        <div id="behaviorButtons"></div>
     </div>
 
     <script>
-        // Behavior categories
-        const POSITIVE = ['Helping peer', 'Good question'];
-        const NEGATIVE = ['Off task', 'Inappropriate language'];
+        let periods = [];
+        let students = {};
+        let currentPeriod = '';
+        let selectedStudent = '';
 
-        // State
-        let periods = JSON.parse(localStorage.getItem('periods')) || ['Period 1'];
-        let selectedPeriod = periods[0];
-        let periodData = JSON.parse(localStorage.getItem('periodData')) || 
-            Object.fromEntries(periods.map(p => [p, { students: [], logs: [] }]));
+        const POSITIVE_BEHAVIORS = ['Asking deep questions', 'Helping a peer', 'Answering questions', 'Helping organization'];
+        const NEGATIVE_BEHAVIORS = ['On phone', 'Off task', 'Cheating', 'Missing materials'];
 
-        // DOM elements
-        const periodsDiv = document.getElementById('periods');
-        const studentsDiv = document.getElementById('students');
-        const behaviorsDiv = document.getElementById('behaviors');
-
-        // Initialize
-        function init() {
-            renderPeriods();
-            renderStudents();
-            renderBehaviors();
-        }
-
-        // Periods
         function addPeriod() {
-            const newPeriod = `Period ${periods.length + 1}`;
-            periods.push(newPeriod);
-            periodData[newPeriod] = { students: [], logs: [] };
-            saveState();
-            renderPeriods();
-        }
-
-        function renderPeriods() {
-            periodsDiv.innerHTML = periods.map(p => `
-                <button onclick="switchPeriod('${p}')">${p}</button>
-            `).join('');
-        }
-
-        function switchPeriod(periodName) {
-            selectedPeriod = periodName;
-            periodData = JSON.parse(localStorage.getItem('periodData'));
-            renderStudents();
-            renderBehaviors();
-        }
-
-        // Students
-        function addStudent() {
-            const input = document.getElementById('studentInput');
-            if (input.value) {
-                periodData[selectedPeriod].students.push(input.value);
-                input.value = '';
-                saveState();
-                renderStudents();
+            const periodName = document.getElementById('periodInput').value.trim();
+            if (periodName && !periods.includes(periodName)) {
+                periods.push(periodName);
+                students[periodName] = [];
+                updatePeriodList();
+                document.getElementById('periodInput').value = '';
             }
         }
 
-        function renderStudents() {
-            const students = periodData[selectedPeriod].students.sort();
-            studentsDiv.innerHTML = students.map(s => `
-                <div class="student-list">
-                    <li onclick="selectStudent('${s}')">${s}</li>
-                </div>
-            `).join('');
+        function updatePeriodList() {
+            const periodList = document.getElementById('periodList');
+            periodList.innerHTML = periods.map(period => 
+                `<button onclick="selectPeriod('${period}')">${period}</button>`
+            ).join('');
         }
 
-        // Behaviors
-        function renderBehaviors() {
-            behaviorsDiv.innerHTML = [...POSITIVE, ...NEGATIVE].map(b => `
-                <button onclick="logBehavior('${b}')">${b}</button>
-            `).join('');
+        function selectPeriod(period) {
+            currentPeriod = period;
+            updateStudentList();
         }
 
-        // Student selection
-        let selectedStudent = null;
-        function selectStudent(name) {
-            selectedStudent = name;
-            document.querySelectorAll('.student-list li').forEach(li => {
-                li.style.backgroundColor = li.textContent === name ? '#e8f4f8' : '';
+        function addStudent() {
+            if (!currentPeriod) {
+                alert('Please select a period first');
+                return;
+            }
+            const studentName = document.getElementById('studentInput').value.trim();
+            if (studentName && !students[currentPeriod].includes(studentName)) {
+                students[currentPeriod].push(studentName);
+                updateStudentList();
+                document.getElementById('studentInput').value = '';
+            }
+        }
+
+        function updateStudentList() {
+            const studentList = document.getElementById('studentList');
+            studentList.innerHTML = students[currentPeriod].map(student => 
+                `<div class="student-item" onclick="selectStudent('${student}')">${student}</div>`
+            ).join('');
+        }
+
+        function selectStudent(student) {
+            selectedStudent = student;
+            document.querySelectorAll('.student-item').forEach(item => {
+                item.classList.toggle('selected', item.textContent === student);
             });
         }
 
-        // Logging
+        function createBehaviorButtons() {
+            const behaviorButtons = document.getElementById('behaviorButtons');
+            const allBehaviors = [...POSITIVE_BEHAVIORS, ...NEGATIVE_BEHAVIORS];
+            behaviorButtons.innerHTML = allBehaviors.map(behavior => 
+                `<button onclick="logBehavior('${behavior}')">${behavior}</button>`
+            ).join('');
+        }
+
         function logBehavior(behavior) {
-            if (!selectedStudent) return alert('Select a student!');
-            
-            periodData[selectedPeriod].logs.push({
-                student: selectedStudent,
-                behavior,
-                timestamp: new Date().toISOString()
-            });
-            
-            saveState();
+            if (!selectedStudent) {
+                alert('Please select a student first');
+                return;
+            }
+            console.log(`Logged: ${selectedStudent} - ${behavior}`);
+            // Here you would typically save this to your data structure or send to a server
         }
 
-        // Save state
-        function saveState() {
-            localStorage.setItem('periods', JSON.stringify(periods));
-            localStorage.setItem('periodData', JSON.stringify(periodData));
-        }
-
-        // Initialize app
-        init();
+        // Initialize the app
+        createBehaviorButtons();
     </script>
 </body>
 </html>
+
