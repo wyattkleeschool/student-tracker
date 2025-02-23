@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Classroom Behavior Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .container {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            padding: 8px;
+            width: 200px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .list-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .delete-btn {
+            background: #e74c3c;
+            margin-left: 10px;
+        }
+        .behavior-btns {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Period Management -->
+        <div class="section">
+            <h2>Class Periods</h2>
+            <div class="input-group">
+                <input type="text" id="periodInput" placeholder="Add period name">
+                <button onclick="addPeriod()">Add Period</button>
+            </div>
+            <div id="periodsList"></div>
+        </div>
+
+        <!-- Student Management -->
+        <div class="section">
+            <h2>Students</h2>
+            <div class="input-group">
+                <input type="text" id="studentInput" placeholder="Add student name">
+                <button onclick="addStudent()">Add Student</button>
+            </div>
+            <div id="studentsList"></div>
+        </div>
+
+        <!-- Behavior Tracking -->
+        <div class="section">
+            <h2>Track Behavior</h2>
+            <div class="behavior-btns" id="behaviorButtons"></div>
+            <button onclick="exportCSV()" style="margin-top: 20px;">Export Weekly Data</button>
+        </div>
+    </div>
+
+    <script>
+        // Behavior categories
+        const POSITIVE_BEHAVIORS = [
+            'Asking deep questions',
+            'Helping a peer',
+            'Answering questions in class',
+            'Helping class organization'
+        ];
+        const NEGATIVE_BEHAVIORS = [
+            'On phone with incomplete work',
+            'Off task on Chromebook',
+            'Cheating off friend on classwork',
+            'Missing materials',
+            'Backpack not in place',
+            'Inappropriate language',
+            'Harassing others',
+            'Opening door out of place',
+            'No bathroom pass',
+            'Incorrect bathroom pass',
+            'Photo math class work',
+            'Other class obstructions'
+        ];
+
+        // State management
+        let periods = JSON.parse(localStorage.getItem('periods')) || [];
+        let students = JSON.parse(localStorage.getItem('students')) || [];
+        let behaviorLogs = JSON.parse(localStorage.getItem('behaviorLogs')) || [];
+
+        // DOM elements
+        const periodsList = document.getElementById('periodsList');
+        const studentsList = document.getElementById('studentsList');
+        const behaviorButtons = document.getElementById('behaviorButtons');
+
+        // Initialize UI
+        function initUI() {
+            renderPeriods();
+            renderStudents();
+            renderBehaviorButtons();
+        }
+
+        // Period management
+        function addPeriod() {
+            const input = document.getElementById('periodInput');
+            if (input.value.trim()) {
+                periods.push(input.value);
+                input.value = '';
+                saveState();
+                renderPeriods();
+            }
+        }
+
+        function deletePeriod(index) {
+            periods.splice(index, 1);
+            saveState();
+            renderPeriods();
+        }
+
+        function renderPeriods() {
+            periodsList.innerHTML = periods.map((p, i) => `
+                <div class="list-item">
+                    <span>${p}</span>
+                    <button class="delete-btn" onclick="deletePeriod(${i})">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        // Student management
+        function addStudent() {
+            const input = document.getElementById('studentInput');
+            if (input.value.trim()) {
+                students.push(input.value);
+                input.value = '';
+                saveState();
+                renderStudents();
+            }
+        }
+
+        function deleteStudent(index) {
+            students.splice(index, 1);
+            saveState();
+            renderStudents();
+        }
+
+        function renderStudents() {
+            students.sort();
+            studentsList.innerHTML = students.map((s, i) => `
+                <div class="list-item">
+                    <span>${s}</span>
+                    <button class="delete-btn" onclick="deleteStudent(${i})">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        // Behavior tracking
+        function renderBehaviorButtons() {
+            behaviorButtons.innerHTML = [...POSITIVE_BEHAVIORS, ...NEGATIVE_BEHAVIORS].map(b => `
+                <button onclick="logBehavior('${b}')">${b}</button>
+            `).join('');
+        }
+
+        function logBehavior(behavior) {
+            const log = {
+                student: students[0], // Select first student for demo
+                behavior,
+                timestamp: new Date().toISOString(),
+                category: POSITIVE_BEHAVIORS.includes(behavior) ? 'positive' : 'negative'
+            };
+            behaviorLogs.push(log);
+            saveState();
+        }
+
+        // Export to CSV
+        function exportCSV() {
+            const csvContent = [
+                ['Student', 'Behavior', 'Date', 'Category'],
+                ...behaviorLogs.map(log => [
+                    log.student,
+                    log.behavior,
+                    log.timestamp.split('T')[0],
+                    log.category
+                ])
+            ].map(row => row.join(',')).join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `behavior-export-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Save state to localStorage
+        function saveState() {
+            localStorage.setItem('periods', JSON.stringify(periods));
+            localStorage.setItem('students', JSON.stringify(students));
+            localStorage.setItem('behaviorLogs', JSON.stringify(behaviorLogs));
+        }
+
+        // Initialize app
+        initUI();
+        window.addEventListener('beforeunload', saveState);
+    </script>
+</body>
+</html>
