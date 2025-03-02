@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Class Period Tracker</title>
+    <title>Class Behavior Tracker</title>
     <style>
-        .page { display: none; }
-        .active { display: block; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; background: #f0f0f0; cursor: pointer; }
+        .active-tab { background: #2196F3; color: white; }
+        
+        .tab-content { display: none; }
+        .active-content { display: block; }
+        
         .student-btn {
             background: #4CAF50;
             color: white;
@@ -15,172 +20,142 @@
             width: 150px;
             text-align: center;
             font-size: 16px;
+            position: relative;
         }
         .yellow { background: #FFD700; }
         .red { background: #FF0000; }
-        .referral { font-size: 12px; margin-top: 5px; }
-        .reset-btn { margin: 20px 0; padding: 10px 20px; background: #2196F3; }
-        .edit-btn { background: #FF9800; margin-left: 5px; }
-        .edit-input { width: 100%; padding: 5px; margin: 5px 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
+        .referral { 
+            font-size: 12px;
+            position: absolute;
+            bottom: 5px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .reset-btn {
+            margin: 20px 0;
+            padding: 10px 20px;
+            background: #2196F3;
+            color: white;
+        }
+        
+        .edit-mode { background: #FF9800; }
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <div id="navButtons">
-        <button onclick="showPage('page1')">Period 1</button>
-        <button onclick="showPage('page2')">Period 2</button>
-        <button onclick="showPage('page3')">Period 3</button>
-        <button onclick="showPage('page4')">Period 4</button>
-        <button onclick="showPage('page5')">Period 5</button>
-        <button onclick="showPage('page6')">Period 6</button>
-        <button onclick="showPage('page7')">Data Log</button>
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active-tab" onclick="showTab('tab1')">Period 1</button>
+        <button class="tab-btn" onclick="showTab('tab2')">Period 2</button>
+        <button class="tab-btn" onclick="showTab('tab3')">Period 3</button>
+        <button class="tab-btn" onclick="showTab('tab4')">Period 4</button>
+        <button class="tab-btn" onclick="showTab('tab5')">Period 5</button>
+        <button class="tab-btn" onclick="showTab('tab6')">Period 6</button>
+        <button class="tab-btn" onclick="showTab('tab7')">Period 7</button>
     </div>
 
-    <!-- Period Pages -->
-    <!-- [Previous period pages remain unchanged] -->
-
-    <!-- Data Log Page -->
-    <div class="page" id="page7">
-        <h2>Data Log</h2>
-        <table id="dataLogTable">
-            <thead>
-                <tr>
-                    <th>Student Name</th>
-                    <th>Period</th>
-                    <th>Timestamp</th>
-                </tr>
-            </thead>
-            <tbody id="dataLogBody"></tbody>
-        </table>
+    <!-- Tab Content -->
+    <div id="tab1" class="tab-content active-content">
+        <div id="tab1-buttons"></div>
+    </div>
+    <div id="tab2" class="tab-content">
+        <div id="tab2-buttons"></div>
+    </div>
+    <div id="tab3" class="tab-content">
+        <div id="tab3-buttons"></div>
+    </div>
+    <div id="tab4" class="tab-content">
+        <div id="tab4-buttons"></div>
+    </div>
+    <div id="tab5" class="tab-content">
+        <div id="tab5-buttons"></div>
+    </div>
+    <div id="tab6" class="tab-content">
+        <div id="tab6-buttons"></div>
+    </div>
+    <div id="tab7" class="tab-content">
+        <div id="tab7-buttons"></div>
     </div>
 
     <button class="reset-btn" onclick="resetAll()">Reset All</button>
 
     <script>
-        // Data tracking
-        let dataLog = [];
+        const tabs = ['tab1', 'tab2', 'tab3', 'tab4', 'tab5', 'tab6', 'tab7'];
+        const studentNames = Array.from({length: 36}, (_, i) => `Student ${i + 1}`);
 
-        // Create student buttons for each period
-        const periods = ['page1', 'page2', 'page3', 'page4', 'page5', 'page6'];
-        const studentNames = [
-            'Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Frank',
-            'Grace', 'Hank', 'Ivy', 'Jake', 'Kate', 'Lucy',
-            'Mike', 'Nina', 'Owen', 'Pam', 'Quinn', 'Ruth',
-            'Sam', 'Tina', 'Uma', 'Vic', 'Wendy', 'Xander',
-            'Yara', 'Zoe'
-        ];
-
-        // Initialize pages
-        periods.forEach(period => {
-            const container = document.getElementById(period);
+        // Initialize tabs
+        tabs.forEach(tab => {
+            const container = document.getElementById(`${tab}-buttons`);
             const grid = document.createElement('div');
             grid.style.display = 'grid';
             grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(150px, 1fr))';
             grid.style.gap = '10px';
             
             studentNames.forEach(name => {
-                const btn = document.createElement('div');
+                const btn = document.createElement('button');
                 btn.className = 'student-btn';
-                btn.innerHTML = `
-                    <span>${name}</span>
-                    <button class="edit-btn" onclick="editStudentName(this)">Edit</button>
-                `;
+                btn.textContent = name;
                 btn.dataset.count = '0';
-                btn.dataset.lastPressed = '';
-                btn.dataset.period = period.replace('page', 'Period ');
-                btn.querySelector('span').onclick = () => logPress(btn);
+                btn.dataset.originalName = name;
+                btn.ondblclick = () => editStudentName(btn);
+                btn.onclick = () => logPress(btn);
                 grid.appendChild(btn);
             });
             container.appendChild(grid);
         });
 
-        // Page navigation
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            if (pageId === 'page7') updateDataLogTable();
+        // Tab switching
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => 
+                btn.classList.toggle('active-tab', btn.textContent === tabId));
+            document.querySelectorAll('.tab-content').forEach(content => 
+                content.classList.toggle('active-content', content.id === tabId));
         }
 
-        // Log press functionality
+        // Press tracking
         function logPress(btn) {
             const count = parseInt(btn.dataset.count) + 1;
-            const timestamp = new Date().toLocaleString();
-            
-            // Update button state
             btn.dataset.count = count;
-            btn.dataset.lastPressed = timestamp;
             
-            // Update button appearance
+            // Update appearance
             btn.classList.remove('yellow', 'red');
             if (count === 1) btn.classList.add('yellow');
-            if (count === 2) btn.classList.add('red');
-            if (count >= 3) {
+            if (count >= 2) btn.classList.add('red');
+            
+            // Add referral text after 3 presses
+            if (count === 3) {
                 btn.innerHTML = `
-                    <span>${btn.querySelector('span').textContent}</span>
+                    <span>${btn.textContent}</span>
                     <div class="referral">REFERRAL</div>
-                    <button class="edit-btn" onclick="editStudentName(this)">Edit</button>
                 `;
             }
-            
-            // Add to data log
-            dataLog.push({
-                student: btn.querySelector('span').textContent,
-                period: btn.dataset.period,
-                timestamp: timestamp
-            });
-            updateDataLogTable();
         }
 
         // Student name editing
         function editStudentName(btn) {
-            const span = btn.previousElementSibling;
             const input = document.createElement('input');
-            input.className = 'edit-input';
-            input.value = span.textContent;
+            input.value = btn.textContent;
             input.onblur = () => {
-                span.textContent = input.value;
-                btn.insertAdjacentElement('beforebegin', input);
+                btn.textContent = input.value;
+                btn.dataset.originalName = input.value;
                 input.remove();
             };
-            span.replaceWith(input);
+            btn.replaceWith(input);
             input.focus();
-        }
-
-        // Data log table update
-        function updateDataLogTable() {
-            const tableBody = document.getElementById('dataLogBody');
-            tableBody.innerHTML = dataLog.map(entry => `
-                <tr>
-                    <td>${entry.student}</td>
-                    <td>${entry.period}</td>
-                    <td>${entry.timestamp}</td>
-                </tr>
-            `).join('');
         }
 
         // Reset functionality
         function resetAll() {
             document.querySelectorAll('.student-btn').forEach(btn => {
-                // Remove referral div if present
+                // Remove referral text
                 const referralDiv = btn.querySelector('.referral');
                 if (referralDiv) referralDiv.remove();
                 
-                // Restore original button structure
-                btn.innerHTML = `
-                    <span>${btn.querySelector('span').textContent}</span>
-                    <button class="edit-btn" onclick="editStudentName(this)">Edit</button>
-                `;
-                
-                // Reset dataset properties
+                // Reset button state
                 btn.classList.remove('yellow', 'red');
                 btn.dataset.count = '0';
-                btn.dataset.lastPressed = '';
+                btn.textContent = btn.dataset.originalName;
             });
-            dataLog = [];
-            updateDataLogTable();
         }
     </script>
 </body>
