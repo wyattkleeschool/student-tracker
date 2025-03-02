@@ -20,9 +20,21 @@
         .red { background: #FF0000; }
         .referral { font-size: 12px; margin-top: 5px; }
         .reset-btn { margin: 20px 0; padding: 10px 20px; background: #2196F3; }
+        .edit-btn { background: #FF9800; margin-left: 5px; }
+        .edit-input { width: 100%; padding: 5px; margin: 5px 0; }
     </style>
 </head>
 <body>
+    <!-- Navigation -->
+    <div id="navButtons">
+        <button onclick="showPage('page1')">Period 1</button>
+        <button onclick="showPage('page2')">Period 2</button>
+        <button onclick="showPage('page3')">Period 3</button>
+        <button onclick="showPage('page4')">Period 4</button>
+        <button onclick="showPage('page5')">Period 5</button>
+        <button onclick="showPage('page6')">Period 6</button>
+    </div>
+
     <!-- Page 1 -->
     <div class="page active" id="page1">
         <h2>Period 1</h2>
@@ -67,7 +79,7 @@
         const studentNames = [
             'Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Frank',
             'Grace', 'Hank', 'Ivy', 'Jake', 'Kate', 'Lucy',
-            'Mike', 'Nina', 'Owen', 'Pam', 'Quinn', 'Ruth',
+            'Mike', 'Nina', 'Owen', 'P', 'Quinn', 'Ruth',
             'Sam', 'Tina', 'Uma', 'Vic', 'Wendy', 'Xander',
             'Yara', 'Zoe'
         ];
@@ -81,16 +93,25 @@
             grid.style.gap = '10px';
             
             studentNames.forEach(name => {
-                const btn = document.createElement('button');
+                const btn = document.createElement('div');
                 btn.className = 'student-btn';
-                btn.textContent = name;
+                btn.innerHTML = `
+                    <span>${name}</span>
+                    <button class="edit-btn" onclick="editStudentName(this)">Edit</button>
+                `;
                 btn.dataset.count = '0';
                 btn.dataset.lastPressed = '';
-                btn.onclick = () => logPress(btn);
+                btn.querySelector('span').onclick = () => logPress(btn);
                 grid.appendChild(btn);
             });
             container.appendChild(grid);
         });
+
+        // Page navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
 
         // Log press functionality
         function logPress(btn) {
@@ -106,18 +127,40 @@
             if (count === 1) btn.classList.add('yellow');
             if (count === 2) btn.classList.add('red');
             if (count >= 3) {
-                btn.innerHTML = btn.textContent + '<div class="referral">REFERRAL</div>';
+                btn.innerHTML = `
+                    <span>${btn.querySelector('span').textContent}</span>
+                    <div class="referral">REFERRAL</div>
+                    <button class="edit-btn" onclick="editStudentName(this)">Edit</button>
+                `;
             }
             
             // Log to console
-            console.log(`Pressed: ${btn.textContent} | Count: ${count} | Time: ${timestamp}`);
+            console.log(`Pressed: ${btn.querySelector('span').textContent} | Count: ${count} | Time: ${timestamp}`);
+        }
+
+        // Student name editing
+        function editStudentName(btn) {
+            const span = btn.previousElementSibling;
+            const input = document.createElement('input');
+            input.className = 'edit-input';
+            input.value = span.textContent;
+            input.onblur = () => {
+                span.textContent = input.value;
+                btn.insertAdjacentElement('beforebegin', input);
+                input.remove();
+            };
+            span.replaceWith(input);
+            input.focus();
         }
 
         // Reset functionality
         function resetAll() {
             document.querySelectorAll('.student-btn').forEach(btn => {
                 btn.classList.remove('yellow', 'red');
-                btn.innerHTML = btn.textContent.split('<div')[0];
+                btn.innerHTML = `
+                    <span>${btn.dataset.originalName || btn.querySelector('span').textContent}</span>
+                    <button class="edit-btn" onclick="editStudentName(this)">Edit</button>
+                `;
                 btn.dataset.count = '0';
                 btn.dataset.lastPressed = '';
             });
@@ -125,4 +168,3 @@
     </script>
 </body>
 </html>
-
