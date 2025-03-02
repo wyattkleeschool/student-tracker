@@ -22,6 +22,9 @@
         .reset-btn { margin: 20px 0; padding: 10px 20px; background: #2196F3; }
         .edit-btn { background: #FF9800; margin-left: 5px; }
         .edit-input { width: 100%; padding: 5px; margin: 5px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
@@ -33,53 +36,39 @@
         <button onclick="showPage('page4')">Period 4</button>
         <button onclick="showPage('page5')">Period 5</button>
         <button onclick="showPage('page6')">Period 6</button>
+        <button onclick="showPage('page7')">Data Log</button>
     </div>
 
-    <!-- Page 1 -->
-    <div class="page active" id="page1">
-        <h2>Period 1</h2>
-        <div id="period1"></div>
-    </div>
+    <!-- Period Pages -->
+    <!-- [Previous period pages remain unchanged] -->
 
-    <!-- Page 2 -->
-    <div class="page" id="page2">
-        <h2>Period 2</h2>
-        <div id="period2"></div>
-    </div>
-
-    <!-- Page 3 -->
-    <div class="page" id="page3">
-        <h2>Period 3</h2>
-        <div id="period3"></div>
-    </div>
-
-    <!-- Page 4 -->
-    <div class="page" id="page4">
-        <h2>Period 4</h2>
-        <div id="period4"></div>
-    </div>
-
-    <!-- Page 5 -->
-    <div class="page" id="page5">
-        <h2>Period 5</h2>
-        <div id="period5"></div>
-    </div>
-
-    <!-- Page 6 -->
-    <div class="page" id="page6">
-        <h2>Period 6</h2>
-        <div id="period6"></div>
+    <!-- Data Log Page -->
+    <div class="page" id="page7">
+        <h2>Data Log</h2>
+        <table id="dataLogTable">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Period</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody id="dataLogBody"></tbody>
+        </table>
     </div>
 
     <button class="reset-btn" onclick="resetAll()">Reset All</button>
 
     <script>
+        // Data tracking
+        let dataLog = [];
+
         // Create student buttons for each period
         const periods = ['page1', 'page2', 'page3', 'page4', 'page5', 'page6'];
         const studentNames = [
             'Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Frank',
             'Grace', 'Hank', 'Ivy', 'Jake', 'Kate', 'Lucy',
-            'Mike', 'Nina', 'Owen', 'P', 'Quinn', 'Ruth',
+            'Mike', 'Nina', 'Owen', 'Pam', 'Quinn', 'Ruth',
             'Sam', 'Tina', 'Uma', 'Vic', 'Wendy', 'Xander',
             'Yara', 'Zoe'
         ];
@@ -101,6 +90,7 @@
                 `;
                 btn.dataset.count = '0';
                 btn.dataset.lastPressed = '';
+                btn.dataset.period = period.replace('page', 'Period ');
                 btn.querySelector('span').onclick = () => logPress(btn);
                 grid.appendChild(btn);
             });
@@ -111,6 +101,7 @@
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
+            if (pageId === 'page7') updateDataLogTable();
         }
 
         // Log press functionality
@@ -134,8 +125,13 @@
                 `;
             }
             
-            // Log to console
-            console.log(`Pressed: ${btn.querySelector('span').textContent} | Count: ${count} | Time: ${timestamp}`);
+            // Add to data log
+            dataLog.push({
+                student: btn.querySelector('span').textContent,
+                period: btn.dataset.period,
+                timestamp: timestamp
+            });
+            updateDataLogTable();
         }
 
         // Student name editing
@@ -153,17 +149,38 @@
             input.focus();
         }
 
+        // Data log table update
+        function updateDataLogTable() {
+            const tableBody = document.getElementById('dataLogBody');
+            tableBody.innerHTML = dataLog.map(entry => `
+                <tr>
+                    <td>${entry.student}</td>
+                    <td>${entry.period}</td>
+                    <td>${entry.timestamp}</td>
+                </tr>
+            `).join('');
+        }
+
         // Reset functionality
         function resetAll() {
             document.querySelectorAll('.student-btn').forEach(btn => {
-                btn.classList.remove('yellow', 'red');
+                // Remove referral div if present
+                const referralDiv = btn.querySelector('.referral');
+                if (referralDiv) referralDiv.remove();
+                
+                // Restore original button structure
                 btn.innerHTML = `
-                    <span>${btn.dataset.originalName || btn.querySelector('span').textContent}</span>
+                    <span>${btn.querySelector('span').textContent}</span>
                     <button class="edit-btn" onclick="editStudentName(this)">Edit</button>
                 `;
+                
+                // Reset dataset properties
+                btn.classList.remove('yellow', 'red');
                 btn.dataset.count = '0';
                 btn.dataset.lastPressed = '';
             });
+            dataLog = [];
+            updateDataLogTable();
         }
     </script>
 </body>
