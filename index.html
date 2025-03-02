@@ -1,163 +1,128 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Classroom Behavior Tracker</title>
+    <title>Class Period Tracker</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
-        .section { margin-bottom: 20px; }
-        button { padding: 5px 10px; margin: 5px; }
-        input { padding: 5px; margin: 5px; }
-        .student-list { display: flex; flex-wrap: wrap; }
-        .student-item { background: #f0f0f0; margin: 5px; padding: 5px; cursor: pointer; }
-        .selected { background: #add8e6; }
         .page { display: none; }
         .active { display: block; }
-        .behavior-columns { display: flex; justify-content: space-between; }
-        .behavior-column { width: 48%; }
-        .positive { background-color: #90EE90; }
-        .negative { background-color: #FFB6C1; }
+        .student-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 15px;
+            margin: 5px;
+            border: none;
+            cursor: pointer;
+            width: 150px;
+            text-align: center;
+            font-size: 16px;
+        }
+        .yellow { background: #FFD700; }
+        .red { background: #FF0000; }
+        .referral { font-size: 12px; margin-top: 5px; }
+        .reset-btn { margin: 20px 0; padding: 10px 20px; background: #2196F3; }
     </style>
 </head>
 <body>
-    <h1>Classroom Behavior Tracker</h1>
-
-    <div id="periodPage" class="page active">
-        <h2>Periods</h2>
-        <input type="text" id="periodInput" placeholder="Enter period name">
-        <button onclick="addPeriod()">Add Period</button>
-        <div id="periodList"></div>
+    <!-- Page 1 -->
+    <div class="page active" id="page1">
+        <h2>Period 1</h2>
+        <div id="period1"></div>
     </div>
 
-    <div id="studentPage" class="page">
-        <h2 id="currentPeriodTitle"></h2>
-        <button onclick="showPage('periodPage')">Back to Periods</button>
-        <div class="section">
-            <h3>Students</h3>
-            <input type="text" id="studentInput" placeholder="Enter student name">
-            <button onclick="addStudent()">Add Student</button>
-            <div id="studentList" class="student-list"></div>
-        </div>
-        <div class="section">
-            <h3>Behaviors</h3>
-            <div class="behavior-columns">
-                <div class="behavior-column" id="positiveBehaviors"></div>
-                <div class="behavior-column" id="negativeBehaviors"></div>
-            </div>
-        </div>
+    <!-- Page 2 -->
+    <div class="page" id="page2">
+        <h2>Period 2</h2>
+        <div id="period2"></div>
     </div>
+
+    <!-- Page 3 -->
+    <div class="page" id="page3">
+        <h2>Period 3</h2>
+        <div id="period3"></div>
+    </div>
+
+    <!-- Page 4 -->
+    <div class="page" id="page4">
+        <h2>Period 4</h2>
+        <div id="period4"></div>
+    </div>
+
+    <!-- Page 5 -->
+    <div class="page" id="page5">
+        <h2>Period 5</h2>
+        <div id="period5"></div>
+    </div>
+
+    <!-- Page 6 -->
+    <div class="page" id="page6">
+        <h2>Period 6</h2>
+        <div id="period6"></div>
+    </div>
+
+    <button class="reset-btn" onclick="resetAll()">Reset All</button>
 
     <script>
-        let periods = [];
-        let students = {};
-        let currentPeriod = '';
-        let selectedStudent = '';
+        // Create student buttons for each period
+        const periods = ['page1', 'page2', 'page3', 'page4', 'page5', 'page6'];
+        const studentNames = [
+            'Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Frank',
+            'Grace', 'Hank', 'Ivy', 'Jake', 'Kate', 'Lucy',
+            'Mike', 'Nina', 'Owen', 'Pam', 'Quinn', 'Ruth',
+            'Sam', 'Tina', 'Uma', 'Vic', 'Wendy', 'Xander',
+            'Yara', 'Zoe'
+        ];
 
-        const POSITIVE_BEHAVIORS = ['Asking deep questions', 'Helping a peer', 'Answering questions', 'Helping organization'];
-        const NEGATIVE_BEHAVIORS = ['On phone', 'Off task', 'Cheating', 'Missing materials'];
+        // Initialize pages
+        periods.forEach(period => {
+            const container = document.getElementById(period);
+            const grid = document.createElement('div');
+            grid.style.display = 'grid';
+            grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(150px, 1fr))';
+            grid.style.gap = '10px';
+            
+            studentNames.forEach(name => {
+                const btn = document.createElement('button');
+                btn.className = 'student-btn';
+                btn.textContent = name;
+                btn.dataset.count = '0';
+                btn.dataset.lastPressed = '';
+                btn.onclick = () => logPress(btn);
+                grid.appendChild(btn);
+            });
+            container.appendChild(grid);
+        });
 
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-        }
-
-        function addPeriod() {
-            const periodName = document.getElementById('periodInput').value.trim();
-            if (periodName && !periods.includes(periodName)) {
-                periods.push(periodName);
-                students[periodName] = [];
-                updatePeriodList();
-                document.getElementById('periodInput').value = '';
+        // Log press functionality
+        function logPress(btn) {
+            const count = parseInt(btn.dataset.count) + 1;
+            const timestamp = new Date().toLocaleString();
+            
+            // Update button state
+            btn.dataset.count = count;
+            btn.dataset.lastPressed = timestamp;
+            
+            // Update button appearance
+            btn.classList.remove('yellow', 'red');
+            if (count === 1) btn.classList.add('yellow');
+            if (count === 2) btn.classList.add('red');
+            if (count >= 3) {
+                btn.innerHTML = btn.textContent + '<div class="referral">REFERRAL</div>';
             }
+            
+            // Log to console
+            console.log(`Pressed: ${btn.textContent} | Count: ${count} | Time: ${timestamp}`);
         }
 
-        function updatePeriodList() {
-            const periodList = document.getElementById('periodList');
-            periodList.innerHTML = periods.map(period => 
-                `<div>${period} 
-                    <button onclick="selectPeriod('${period}')">Select</button> 
-                    <button onclick="deletePeriod('${period}')">Delete</button>
-                </div>`
-            ).join('');
-        }
-
-        function selectPeriod(period) {
-            currentPeriod = period;
-            document.getElementById('currentPeriodTitle').textContent = period;
-            updateStudentList();
-            showPage('studentPage');
-        }
-
-        function deletePeriod(period) {
-            periods = periods.filter(p => p !== period);
-            delete students[period];
-            if (currentPeriod === period) {
-                currentPeriod = '';
-                showPage('periodPage');
-            }
-            updatePeriodList();
-        }
-
-        function addStudent() {
-            const studentName = document.getElementById('studentInput').value.trim();
-            if (studentName && !students[currentPeriod].includes(studentName)) {
-                students[currentPeriod].push(studentName);
-                updateStudentList();
-                document.getElementById('studentInput').value = '';
-            }
-        }
-
-        function updateStudentList() {
-            const studentList = document.getElementById('studentList');
-            studentList.innerHTML = students[currentPeriod].map(student => 
-                `<div class="student-item">
-                    <span onclick="selectStudent('${student}')">${student}</span>
-                    <button onclick="deleteStudent('${student}')">Delete</button>
-                </div>`
-            ).join('');
-        }
-
-        function selectStudent(student) {
-            selectedStudent = student;
-            document.querySelectorAll('.student-item').forEach(item => {
-                item.classList.toggle('selected', item.querySelector('span').textContent === student);
+        // Reset functionality
+        function resetAll() {
+            document.querySelectorAll('.student-btn').forEach(btn => {
+                btn.classList.remove('yellow', 'red');
+                btn.innerHTML = btn.textContent.split('<div')[0];
+                btn.dataset.count = '0';
+                btn.dataset.lastPressed = '';
             });
         }
-
-        function deleteStudent(student) {
-            students[currentPeriod] = students[currentPeriod].filter(s => s !== student);
-            if (selectedStudent === student) {
-                selectedStudent = '';
-            }
-            updateStudentList();
-        }
-
-        function createBehaviorButtons() {
-            const positiveBehaviors = document.getElementById('positiveBehaviors');
-            const negativeBehaviors = document.getElementById('negativeBehaviors');
-            
-            positiveBehaviors.innerHTML = POSITIVE_BEHAVIORS.map(behavior => 
-                `<button class="positive" onclick="logBehavior('${behavior}')">${behavior}</button>`
-            ).join('');
-            
-            negativeBehaviors.innerHTML = NEGATIVE_BEHAVIORS.map(behavior => 
-                `<button class="negative" onclick="logBehavior('${behavior}')">${behavior}</button>`
-            ).join('');
-        }
-
-        function logBehavior(behavior) {
-            if (!selectedStudent) {
-                alert('Please select a student first');
-                return;
-            }
-            console.log(`Logged for ${currentPeriod}: ${selectedStudent} - ${behavior}`);
-            // Here you would typically save this to your data structure or send to a server
-        }
-
-        // Initialize the app
-        updatePeriodList();
-        createBehaviorButtons();
     </script>
 </body>
 </html>
+
